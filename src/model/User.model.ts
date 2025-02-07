@@ -4,8 +4,9 @@ import mongoose, { Schema, Document } from "mongoose";
 // interface for typesafety
 
 export interface Message extends Document {
-    content: string;
+    content: string,
     createdAt: Date
+
 }
 
 // Message Schema
@@ -18,7 +19,7 @@ const MessageSchema: Schema<Message> = new Schema({
     createdAt: {
         type: Date,
         required: true,
-        default: Date.now
+        default: Date.now,
     }
 })
 
@@ -33,6 +34,7 @@ export interface User extends Document {
     isverified: boolean;
     isAcceptingMessage: boolean;
     messages: Message[]
+    // Other properties here...
 }
 
 // It makes sure that UserSchema matches the User interface.
@@ -71,8 +73,10 @@ const UserSchema: Schema<User> = new Schema({
         default: true,
     },
     messages: [MessageSchema]
+    
 
 })
+
 
 const UserModel=(mongoose.models.User as mongoose.Model<User>)|| mongoose.model<User>("User",UserSchema)
 export default UserModel
