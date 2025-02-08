@@ -1,5 +1,4 @@
 import mongoose, { Connection } from "mongoose";
-import { log } from "node:console";
 
 // Define a type for the connection object
 type ConnectionObject = {
@@ -33,3 +32,5 @@ async function dbConnect(): Promise<void> {
         process.exit(1); // Exit the process with a failure code (1)
     }
 }
+
+export default dbConnect
