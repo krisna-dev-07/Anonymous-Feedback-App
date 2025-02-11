@@ -1,5 +1,5 @@
 import mongoose, { Connection } from "mongoose";
-
+import { DB_NAME } from "./constants";
 // Define a type for the connection object
 type ConnectionObject = {
     isConnected?: number  // `isConnected` will store the connection status (0: disconnected, 1: connected)
@@ -18,9 +18,9 @@ async function dbConnect(): Promise<void> {
 
     try {
         // Try to connect to MongoDB using the connection string from environment variables
-        const db = await mongoose.connect(
-            process.env.MONGODB_URI || "",
-        );
+        const db = await mongoose.connect(process.env.MONGODB_URI || "", {
+            dbName: DB_NAME, // Use the database name from constants.ts
+        });
 
         // Store the connection state (1: connected, 0: not connected)
         connection.isConnected = db.connections[0].readyState ?? 0;
