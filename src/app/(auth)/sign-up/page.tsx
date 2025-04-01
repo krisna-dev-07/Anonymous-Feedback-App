@@ -11,9 +11,9 @@ import { signUpSchema } from "@/schemas/signUpSchema"
 import axios, { AxiosError } from "axios"
 import { ApiResponse } from "@/types/ApiResponse"
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 export default function SignUpForm() {
   const [username, setUserName] = useState('')
   const [usernameMessage, setUsernameMessage] = useState('')
@@ -78,7 +78,7 @@ export default function SignUpForm() {
       })
 
       // redirect to verify page 
-      router.replace(`/verify-code/${username}`)
+      router.replace(`/verify/${username}`);
     } catch (error) {
       console.log("Error in signup of user", error);
       const axiosError = error as AxiosError<ApiResponse>
