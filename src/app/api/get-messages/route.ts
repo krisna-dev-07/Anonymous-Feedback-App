@@ -1,55 +1,65 @@
-import { getServerSession } from "next-auth";
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from "../auth/[...nextauth]/options";
 import UserModel from "@/model/User.model";
 import dbConnect from "@/lib/dbConnect";
-import { User } from "next-auth";//not the user which is in the session
+import { User } from "next-auth";
 import mongoose from "mongoose";
+import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
-
     await dbConnect();
 
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
+    const _user: User = session?.user;
 
-    const user: User = session?.user
-
-    if (!session || !session.user) {
-        return Response.json({
+    if (!session || !_user) {
+        return NextResponse.json({
             success: false,
             message: "User not Authenticated"
-        },
-            { status: 401 })
+        }, { status: 401 });
     }
 
-    const userId = new mongoose.Types.ObjectId(user._id);
-
     try {
-        const user = await UserModel.aggregate([
-            { $match: { id: userId } },
+        const userId = new mongoose.Types.ObjectId(_user._id);
+        
+        // First check if user exists
+        const userExists = await UserModel.findById(userId);
+        if (!userExists) {
+            return NextResponse.json(
+              { message: 'User not found', success: false },
+              { status: 404 }
+            );
+        }
+
+        // Then get messages with aggregation
+        const result = await UserModel.aggregate([
+            { $match: { _id: userId } },
             { $unwind: '$messages' },
             { $sort: { 'messages.createdAt': -1 } },
-            { $group: { _id: '$_id', message: { $push: '$messages' } } }
-        ])
+            { $group: { 
+                _id: '$_id', 
+                messages: { $push: '$messages' } 
+            }}
+        ]);
 
-        if (!user || user.length === 0) {
-            return Response.json({
-                success: false,
-                message: "User not found"
-            },
-                { status: 401 })
+        // Handle case where user has no messages
+        if (!result || result.length === 0) {
+            return NextResponse.json({
+                success: true,
+                messages: [] // Return empty array instead of error
+            }, { status: 200 });
         }
-        return Response.json({
-            success: true,
-            messages: user[0].messages
-        },
-            { status: 201 })
-    } catch (error) {
-        console.log("An unexpected error occured:", error);
 
-        return Response.json({
+        return NextResponse.json({
+            success: true,
+            messages: result[0].messages
+        }, { status: 200 });
+        
+    } catch (error) {
+        console.error("Error fetching messages:", error);
+        return NextResponse.json({
             success: false,
-            message: "User not unAuthenticated"
-        },
-            { status: 500 })
+            message: "Internal server error"
+        }, { status: 500 });
     }
 }
